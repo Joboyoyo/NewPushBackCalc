@@ -84,9 +84,9 @@
         .btn-active-tie { background-color: #a0aec0 !important; color: white !important; } /* gray-500 */
     </style>
 </head>
-<body class="bg-gray-100 text-gray-900 min-h-screen p-2">
+<body class="bg-gray-100 text-gray-900 min-h-screen">
 
-    <div class="max-w-sm mx-auto bg-gray-200 p-3 rounded-lg shadow-xl font-mono relative">
+    <div class="max-w-sm mx-auto bg-gray-200 p-4 rounded-lg shadow-xl font-mono relative flex flex-col justify-around min-h-screen">
 
         <!-- Reset Button -->
         <button id="reset-btn" class="absolute top-3 right-3 p-1 rounded-full text-gray-500 hover:bg-gray-300 hover:text-gray-700 transition-colors">
@@ -96,14 +96,14 @@
         </button>
 
         <!-- Auton Section -->
-        <div class="flex justify-center gap-2 mb-8 pt-6">
+        <div class="flex justify-center gap-2 pt-6">
             <button id="auton-r" class="auton-btn p-2 rounded-md bg-gray-300 font-bold text-red-500 text-lg w-20">R</button>
             <button id="auton-t" class="auton-btn p-2 rounded-md bg-gray-300 font-bold text-lg w-20">T</button>
             <button id="auton-b" class="auton-btn p-2 rounded-md bg-gray-300 font-bold text-blue-500 text-lg w-20">B</button>
         </div>
 
         <!-- Main Goals Section -->
-        <div class="flex justify-between items-start mb-5">
+        <div class="flex justify-between items-start ">
             
             <!-- Left Long Goal -->
             <div class="flex flex-col items-center gap-1 w-1/4">
@@ -186,7 +186,7 @@
         </div>
 
         <!-- Parking -->
-        <div class="flex flex-col gap-1 mb-6">
+        <div class="flex flex-col gap-1">
             <div class="flex items-center justify-center gap-2">
                 <span class="font-bold text-red-500 text-lg w-4">R</span>
                 <button class="park-btn p-0.5 rounded-md bg-gray-300 w-14 text-base" data-color="r" data-val="0">0</button>
@@ -202,7 +202,7 @@
         </div>
 
         <!-- Score -->
-        <div id="score-section" class="flex justify-between items-center bg-gray-300 p-3 rounded-lg mt-4 transition-colors">
+        <div id="score-section" class="flex justify-between items-center bg-gray-300 p-3 rounded-lg transition-colors">
             <span id="red-score" class="text-3xl font-bold text-red-500 w-1/3 text-center">0</span>
             <span id="score-diff" class="text-3xl font-bold text-gray-700 w-1/3 text-center">+0</span>
             <span id="blue-score" class="text-3xl font-bold text-blue-500 w-1/3 text-center">0</span>
