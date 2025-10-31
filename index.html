@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-M">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRC Scorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for vertical range inputs */
+        input[type="range"][orient="vertical"] {
+            writing-mode: bt-lr; /* IE/Edge */
+            -webkit-appearance: slider-vertical; /* WebKit */
+            appearance: slider-vertical; /* Standard */
+            width: 20px;
+            height: 175px;
+            padding: 0 5px;
+            background: transparent; /* Remove default bg */
+        }
+
+        /* Custom styles for range input tracks - Neutral by default */
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #d1d5db; /* gray-300 */
+            border-radius: 4px;
+            height: 8px;
+        }
+        input[type="range"]::-moz-range-track {
+            background: #d1d5db; /* gray-300 */
+            border-radius: 4px;
+            height: 8px;
+        }
+        
+        /* Slider thumb - Default Neutral */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #f9fafb; /* gray-50 */
+            cursor: pointer;
+            border-radius: 99px;
+            border: 2px solid #4a5568 !important; /* Default gray */
+            margin-top: -8px; /* Center thumb on track */
+            box-shadow: 0px 1px 3px rgba(0,0,0,0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: #f9fafb; /* gray-50 */
+            cursor: pointer;
+            border-radius: 99px;
+            border: 2px solid #4a5568 !important; /* Default gray */
+            box-shadow: 0px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* BRUTE FORCE ID OVERRIDE FOR KNOBS */
+        #lg-r1::-webkit-slider-thumb,
+        #lg-r2::-webkit-slider-thumb {
+            border-color: #ef4444 !important; /* red-500 */
+        }
+        #lg-r1::-moz-range-thumb,
+        #lg-r2::-moz-range-thumb {
+            border-color: #ef4444 !important; /* red-500 */
+        }
+        
+        #lg-b1::-webkit-slider-thumb,
+        #lg-b2::-webkit-slider-thumb {
+            border-color: #3b82f6 !important; /* blue-500 */
+        }
+        #lg-b1::-moz-range-thumb,
+        #lg-b2::-moz-range-thumb {
+            border-color: #3b82f6 !important; /* blue-500 */
+        }
+        /* END KNOB FIX */
+
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Helper class for active state */
+        .btn-active-red { background-color: #ef4444 !important; color: white !important; }
+        .btn-active-blue { background-color: #3b82f6 !important; color: white !important; }
+        .btn-active-tie { background-color: #a0aec0 !important; color: white !important; } /* gray-500 */
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen p-2">
+
+    <div class="max-w-sm mx-auto bg-gray-200 p-3 rounded-lg shadow-xl font-mono relative">
+
+        <!-- Reset Button -->
+        <button id="reset-btn" class="absolute top-3 right-3 p-1 rounded-full text-gray-500 hover:bg-gray-300 hover:text-gray-700 transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path>
+            </svg>
+        </button>
+
+        <!-- Auton Section -->
+        <div class="flex justify-center gap-2 mb-3 pt-6">
+            <button id="auton-r" class="auton-btn p-2 rounded-md bg-gray-300 font-bold text-red-500 text-lg w-20">R</button>
+            <button id="auton-t" class="auton-btn p-2 rounded-md bg-gray-300 font-bold text-lg w-20">T</button>
+            <button id="auton-b" class="auton-btn p-2 rounded-md bg-gray-300 font-bold text-blue-500 text-lg w-20">B</button>
+        </div>
+
+        <!-- Main Goals Section -->
+        <div class="flex justify-between items-start mb-3">
+            
+            <!-- Left Long Goal -->
+            <div class="flex flex-col items-center gap-1 w-1/4">
+                <div class="grid grid-cols-2 gap-1 mb-2">
+                    <button id="cz-l-r" class="cz-btn p-2 rounded-md bg-gray-300 font-bold text-red-500 text-sm">R</button>
+                    <button id="cz-l-b" class="cz-btn p-2 rounded-md bg-gray-300 font-bold text-blue-500 text-sm">B</button>
+                </div>
+                <div class="flex gap-2 justify-center">
+                    <input id="lg-r1" type="range" orient="vertical" min="0" max="15" value="0" class="long-goal red" data-side="left">
+                    <input id="lg-b1" type="range" orient="vertical" min="0" max="15" value="0" class="long-goal blue" data-side="left">
+                </div>
+                <div class="flex gap-2 text-lg font-bold mt-1 justify-center">
+                    <span id="lg-r1-count" class="text-red-500 w-[20px] text-center">0</span>
+                    <span id="lg-b1-count" class="text-blue-500 w-[20px] text-center">0</span>
+                </div>
+            </div>
+
+            <!-- Center Goals -->
+            <div class="flex flex-col gap-4 w-2/5 pt-8">
+                <!-- Center Goal 1 (Upper) -->
+                <div class="flex flex-col gap-1">
+                    <div class="grid grid-cols-4 gap-1">
+                        <button class="cg-btn p-1 rounded-md bg-red-600 text-white text-xs" data-goal="1" data-color="r" data-val="3">+3</button>
+                        <button class="cg-btn p-1 rounded-md bg-red-400 text-white text-xs" data-goal="1" data-color="r" data-val="1">+1</button>
+                        <button class="cg-btn p-1 rounded-md bg-blue-400 text-white text-xs" data-goal="1" data-color="b" data-val="1">+1</button>
+                        <button class="cg-btn p-1 rounded-md bg-blue-600 text-white text-xs" data-goal="1" data-color="b" data-val="3">+3</button>
+                    </div>
+                    <!-- Bar -->
+                    <div class="flex h-5 w-full bg-gray-300 rounded overflow-hidden text-xs font-bold text-white">
+                        <div id="cg1-r-bar" class="bg-red-500 h-full flex items-center justify-center transition-all" style="width: 0%"></div>
+                        <div id="cg1-n-bar" class="bg-gray-400 h-full flex items-center justify-center transition-all" style="width: 100%"></div>
+                        <div id="cg1-b-bar" class="bg-blue-500 h-full flex items-center justify-center transition-all" style="width: 0%"></div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1">
+                        <button class="cg-btn p-1 rounded-md bg-red-600 text-white text-xs" data-goal="1" data-color="r" data-val="-3">-3</button>
+                        <button class="cg-btn p-1 rounded-md bg-red-400 text-white text-xs" data-goal="1" data-color="r" data-val="-1">-1</button>
+                        <button class="cg-btn p-1 rounded-md bg-blue-400 text-white text-xs" data-goal="1" data-color="b" data-val="-1">-1</button>
+                        <button class="cg-btn p-1 rounded-md bg-blue-600 text-white text-xs" data-goal="1" data-color="b" data-val="-3">-3</button>
+                    </div>
+                </div>
+                <!-- Center Goal 2 (Lower) -->
+                <div class="flex flex-col gap-1">
+                    <div class="grid grid-cols-4 gap-1">
+                        <button class="cg-btn p-1 rounded-md bg-red-600 text-white text-xs" data-goal="2" data-color="r" data-val="3">+3</button>
+                        <button class="cg-btn p-1 rounded-md bg-red-400 text-white text-xs" data-goal="2" data-color="r" data-val="1">+1</button>
+                        <button class="cg-btn p-1 rounded-md bg-blue-400 text-white text-xs" data-goal="2" data-color="b" data-val="1">+1</button>
+                        <button class="cg-btn p-1 rounded-md bg-blue-600 text-white text-xs" data-goal="2" data-color="b" data-val="3">+3</button>
+                    </div>
+                    <!-- Bar -->
+                    <div class="flex h-5 w-full bg-gray-300 rounded overflow-hidden text-xs font-bold text-white">
+                        <div id="cg2-r-bar" class="bg-red-500 h-full flex items-center justify-center transition-all" style="width: 0%"></div>
+                        <div id="cg2-n-bar" class="bg-gray-400 h-full flex items-center justify-center transition-all" style="width: 100%"></div>
+                        <div id="cg2-b-bar" class="bg-blue-500 h-full flex items-center justify-center transition-all" style="width: 0%"></div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1">
+                        <button class="cg-btn p-1 rounded-md bg-red-600 text-white text-xs" data-goal="2" data-color="r" data-val="-3">-3</button>
+                        <button class="cg-btn p-1 rounded-md bg-red-400 text-white text-xs" data-goal="2" data-color="r" data-val="-1">-1</button>
+                        <button class="cg-btn p-1 rounded-md bg-blue-400 text-white text-xs" data-goal="2" data-color="b" data-val="-1">-1</button>
+                        <button class="cg-btn p-1 rounded-md bg-blue-600 text-white text-xs" data-goal="2" data-color="b" data-val="-3">-3</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Long Goal -->
+            <div class="flex flex-col items-center gap-1 w-1/4">
+                <div class="grid grid-cols-2 gap-1 mb-2">
+                    <button id="cz-r-r" class="cz-btn p-2 rounded-md bg-gray-300 font-bold text-red-500 text-sm">R</button>
+                    <button id="cz-r-b" class="cz-btn p-2 rounded-md bg-gray-300 font-bold text-blue-500 text-sm">B</button>
+                </div>
+                <div class="flex gap-2 justify-center">
+                    <input id="lg-r2" type="range" orient="vertical" min="0" max="15" value="0" class="long-goal red" data-side="right">
+                    <input id="lg-b2" type="range" orient="vertical" min="0" max="15" value="0" class="long-goal blue" data-side="right">
+                </div>
+                <div class="flex gap-2 text-lg font-bold mt-1 justify-center">
+                    <span id="lg-r2-count" class="text-red-500 w-[20px] text-center">0</span>
+                    <span id="lg-b2-count" class="text-blue-500 w-[20px] text-center">0</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Parking -->
+        <div class="flex flex-col gap-1 mb-3">
+            <div class="flex items-center justify-center gap-2">
+                <span class="font-bold text-red-500 text-lg w-4">R</span>
+                <button class="park-btn p-0.5 rounded-md bg-gray-300 w-14 text-base" data-color="r" data-val="0">0</button>
+                <button class="park-btn p-0.5 rounded-md bg-gray-300 w-14 text-base" data-color="r" data-val="1">1</button>
+                <button class="park-btn p-0.5 rounded-md bg-gray-300 w-14 text-base" data-color="r" data-val="2">2</button>
+            </div>
+            <div class="flex items-center justify-center gap-2">
+                <span class="font-bold text-blue-500 text-lg w-4">B</span>
+                <button class="park-btn p-0.5 rounded-md bg-gray-300 w-14 text-base" data-color="b" data-val="0">0</button>
+                <button class="park-btn p-0.5 rounded-md bg-gray-300 w-14 text-base" data-color="b" data-val="1">1</button>
+                <button class="park-btn p-0.5 rounded-md bg-gray-300 w-14 text-base" data-color="b" data-val="2">2</button>
+            </div>
+        </div>
+
+        <!-- Score -->
+        <div id="score-section" class="flex justify-between items-center bg-gray-300 p-3 rounded-lg mt-4 transition-colors">
+            <span id="red-score" class="text-3xl font-bold text-red-500 w-1/3 text-center">0</span>
+            <span id="score-diff" class="text-3xl font-bold text-gray-700 w-1/3 text-center">+0</span>
+            <span id="blue-score" class="text-3xl font-bold text-blue-500 w-1/3 text-center">0</span>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- STATE ---
+            const initialState = {
+                auton: 'none', // 'r', 'b', 't'
+                longGoals: { r1: 0, b1: 0, r2: 0, b2: 0 },
+                controlZones: { left: 'none', right: 'none' }, // 'r', 'b', 'none'
+                controlOverride: { left: false, right: false },
+                centerGoals: { r1: 0, b1: 0, r2: 0, b2: 0 },
+                parking: { r: 0, b: 0 },
+                points: {
+                    autonWin: 10,
+                    autonTie: 5,
+                    controlZone: 10,
+                    // parking: 1=8, 2=30
+                    longGoalBlock: 3,
+                    upperCenterControl: 8,
+                    lowerCenterControl: 6
+                }
+            };
+            let state = JSON.parse(JSON.stringify(initialState)); // Deep copy
+
+
+            // --- SELECTORS ---
+            const dom = {
+                autonBtns: document.querySelectorAll('.auton-btn'),
+                longGoals: document.querySelectorAll('.long-goal'),
+                lgCounts: {
+                    r1: document.getElementById('lg-r1-count'),
+                    b1: document.getElementById('lg-b1-count'),
+                    r2: document.getElementById('lg-r2-count'),
+                    b2: document.getElementById('lg-b2-count'),
+                },
+                czBtns: {
+                    l_r: document.getElementById('cz-l-r'),
+                    l_b: document.getElementById('cz-l-b'),
+                    r_r: document.getElementById('cz-r-r'),
+                    r_b: document.getElementById('cz-r-b'),
+                },
+                cgBtns: document.querySelectorAll('.cg-btn'),
+                cgBars: {
+                    r1: document.getElementById('cg1-r-bar'),
+                    n1: document.getElementById('cg1-n-bar'),
+                    b1: document.getElementById('cg1-b-bar'),
+                    r2: document.getElementById('cg2-r-bar'),
+                    n2: document.getElementById('cg2-n-bar'),
+                    b2: document.getElementById('cg2-b-bar'),
+                },
+                parkBtns: document.querySelectorAll('.park-btn'),
+                scores: {
+                    section: document.getElementById('score-section'),
+                    red: document.getElementById('red-score'),
+                    blue: document.getElementById('blue-score'),
+                    diff: document.getElementById('score-diff'),
+                },
+                body: document.body,
+                resetBtn: document.getElementById('reset-btn')
+            };
+
+            // --- CALCULATE & RENDER ---
+
+            function calculateScore() {
+                let redScore = 0;
+                let blueScore = 0;
+                const p = state.points;
+
+                // Auton
+                if (state.auton === 'r') redScore += p.autonWin;
+                else if (state.auton === 'b') blueScore += p.autonWin;
+                else if (state.auton === 't') {
+                    redScore += p.autonTie;
+                    blueScore += p.autonTie;
+                }
+
+                // Long Goals
+                redScore += (state.longGoals.r1 + state.longGoals.r2) * p.longGoalBlock;
+                blueScore += (state.longGoals.b1 + state.longGoals.b2) * p.longGoalBlock;
+
+                // Control Zones
+                if (state.controlZones.left === 'r') redScore += p.controlZone;
+                else if (state.controlZones.left === 'b') blueScore += p.controlZone;
+                if (state.controlZones.right === 'r') redScore += p.controlZone;
+                else if (state.controlZones.right === 'b') blueScore += p.controlZone;
+
+                // Center Goals - 3 points per block
+                redScore += (state.centerGoals.r1 + state.centerGoals.r2) * p.longGoalBlock;
+                blueScore += (state.centerGoals.b1 + state.centerGoals.b2) * p.longGoalBlock;
+                
+                // Center Goals - Bonus for control
+                if (state.centerGoals.r1 > state.centerGoals.b1) redScore += p.upperCenterControl;
+                else if (state.centerGoals.b1 > state.centerGoals.r1) blueScore += p.upperCenterControl;
+                
+                if (state.centerGoals.r2 > state.centerGoals.b2) redScore += p.lowerCenterControl;
+                else if (state.centerGoals.b2 > state.centerGoals.r2) blueScore += p.lowerCenterControl;
+                
+                // Parking
+                if (state.parking.r === 1) redScore += 8;
+                else if (state.parking.r === 2) redScore += 30;
+                
+                if (state.parking.b === 1) blueScore += 8;
+                else if (state.parking.b === 2) blueScore += 30;
+
+                const diff = redScore - blueScore;
+                return { redScore, blueScore, diff };
+            }
+
+            function updateUI() {
+                const { redScore, blueScore, diff } = calculateScore();
+
+                // Update Scores
+                dom.scores.red.textContent = redScore;
+                dom.scores.blue.textContent = blueScore;
+                dom.scores.diff.textContent = (diff > 0 ? '+' : '') + diff;
+
+                // Update Score Colors & Background
+                dom.body.style.backgroundColor = '#f3f4f6'; // Keep body solid gray-100
+                const scoreSection = dom.scores.section;
+                const maxDiffForColor = 100; // Max opacity at 100 points difference
+                const alpha = Math.min(1, Math.abs(diff) / maxDiffForColor);
+                const textAlphaThreshold = 0.4; // When to flip text to white
+
+                if (diff > 0) { // Red winning
+                    scoreSection.style.backgroundColor = `rgba(239, 68, 68, ${alpha * 0.8})`; // red-500 with alpha
+                    if (alpha > textAlphaThreshold) {
+                        dom.scores.diff.className = 'text-3xl font-bold text-white w-1/3 text-center';
+                    } else {
+                        dom.scores.diff.className = 'text-3xl font-bold text-red-700 w-1/3 text-center';
+                    }
+                } else if (diff < 0) { // Blue winning
+                    scoreSection.style.backgroundColor = `rgba(59, 130, 246, ${alpha * 0.8})`; // blue-500 with alpha
+                    if (alpha > textAlphaThreshold) {
+                        dom.scores.diff.className = 'text-3xl font-bold text-white w-1/3 text-center';
+                    } else {
+                        dom.scores.diff.className = 'text-3xl font-bold text-blue-700 w-1/3 text-center';
+                    }
+                } else { // Tie
+                    scoreSection.style.backgroundColor = '#d1d5db'; // gray-300
+                    dom.scores.diff.className = 'text-3xl font-bold text-gray-700 w-1/3 text-center';
+                }
+
+                // Update Long Goal Counts
+                dom.lgCounts.r1.textContent = state.longGoals.r1;
+                dom.lgCounts.b1.textContent = state.longGoals.b1;
+                dom.lgCounts.r2.textContent = state.longGoals.r2;
+                dom.lgCounts.b2.textContent = state.longGoals.b2;
+
+                // Update slider visuals (value and background)
+                const r1Slider = document.getElementById('lg-r1');
+                const b1Slider = document.getElementById('lg-b1');
+                const r2Slider = document.getElementById('lg-r2');
+                const b2Slider = document.getElementById('lg-b2');
+
+                r1Slider.value = state.longGoals.r1;
+                b1Slider.value = state.longGoals.b1;
+                r2Slider.value = state.longGoals.r2;
+                b2Slider.value = state.longGoals.b2;
+
+                updateSliderBackground(r1Slider);
+                updateSliderBackground(b1Slider);
+                updateSliderBackground(r2Slider);
+                updateSliderBackground(b2Slider);
+
+                // Update Center Goal Bars
+                updateCenterBar(1, state.centerGoals.r1, state.centerGoals.b1);
+                updateCenterBar(2, state.centerGoals.r2, state.centerGoals.b2);
+
+                // Update Button Active States
+                updateButtonStates();
+            }
+
+            function updateCenterBar(goalNum, r, b) {
+                const capacity = 7;
+                const total = r + b;
+                
+                const rPercent = (r / capacity) * 100;
+                const bPercent = (b / capacity) * 100;
+                const nPercent = (Math.max(0, capacity - total) / capacity) * 100;
+
+                dom.cgBars[`r${goalNum}`].style.width = `${rPercent}%`;
+                dom.cgBars[`n${goalNum}`].style.width = `${nPercent}%`;
+                dom.cgBars[`b${goalNum}`].style.width = `${bPercent}%`;
+
+                // Show count in bar
+                dom.cgBars[`r${goalNum}`].textContent = r > 0 ? r : '';
+                dom.cgBars[`n${goalNum}`].textContent = ''; 
+                dom.cgBars[`b${goalNum}`].textContent = b > 0 ? b : '';
+            }
+
+            function updateSliderBackground(slider) {
+                if (!slider) return;
+                const max = parseInt(slider.max);
+                const val = parseInt(slider.value);
+                const percent = (val / max) * 100;
+                const color = slider.classList.contains('red') ? '#ef4444' : '#3b82f6';
+                const trackColor = '#d1d5db'; // gray-300
+
+                // Apply gradient from bottom (0%) to top (100%)
+                slider.style.background = `linear-gradient(to top, ${color} ${percent}%, ${trackColor} ${percent}%)`;
+            }
+
+            function updateButtonStates() {
+                // Auton
+                dom.autonBtns.forEach(btn => {
+                    btn.classList.remove('btn-active-red', 'btn-active-blue', 'btn-active-tie');
+                    if (btn.id === `auton-${state.auton}`) {
+                        if (state.auton === 'r') btn.classList.add('btn-active-red');
+                        else if (state.auton === 'b') btn.classList.add('btn-active-blue');
+                        else if (state.auton === 't') btn.classList.add('btn-active-tie');
+                    }
+                });
+
+                // Control Zones
+                dom.czBtns.l_r.classList.toggle('btn-active-red', state.controlZones.left === 'r');
+                dom.czBtns.l_b.classList.toggle('btn-active-blue', state.controlZones.left === 'b');
+                dom.czBtns.r_r.classList.toggle('btn-active-red', state.controlZones.right === 'r');
+                dom.czBtns.r_b.classList.toggle('btn-active-blue', state.controlZones.right === 'b');
+
+                // Parking
+                dom.parkBtns.forEach(btn => {
+                    const color = btn.dataset.color;
+                    const val = parseInt(btn.dataset.val);
+                    btn.classList.remove('btn-active-red', 'btn-active-blue');
+                    if (state.parking[color] === val) {
+                        btn.classList.add(color === 'r' ? 'btn-active-red' : 'btn-active-blue');
+                    }
+                });
+            }
+            
+            function autoSetControlZones() {
+                // Left Zone
+                if (!state.controlOverride.left) {
+                    if (state.longGoals.r1 > state.longGoals.b1) state.controlZones.left = 'r';
+                    else if (state.longGoals.b1 > state.longGoals.r1) state.controlZones.left = 'b';
+                    else state.controlZones.left = 'none';
+                }
+                // Right Zone
+                if (!state.controlOverride.right) {
+                    if (state.longGoals.r2 > state.longGoals.b2) state.controlZones.right = 'r';
+                    else if (state.longGoals.b2 > state.longGoals.r2) state.controlZones.right = 'b';
+                    else state.controlZones.right = 'none';
+                }
+            }
+
+            function resetAll() {
+                state = JSON.parse(JSON.stringify(initialState)); // Reset state to initial values
+                
+                // Manually reset slider DOM elements since state change doesn't update them directly for value
+                dom.longGoals.forEach(slider => {
+                    slider.value = 0;
+                });
+
+                // Reset parking buttons visual state
+                dom.parkBtns.forEach(btn => {
+                    btn.classList.remove('btn-active-red', 'btn-active-blue');
+                });
+                // Activate 0 for parking
+                document.querySelector('.park-btn[data-color="r"][data-val="0"]').classList.add('btn-active-red');
+                document.querySelector('.park-btn[data-color="b"][data-val="0"]').classList.add('btn-active-blue');
+
+
+                // Reset control zone overrides
+                state.controlOverride.left = false;
+                state.controlOverride.right = false;
+
+                // Re-evaluate auto control zones based on reset long goal values
+                autoSetControlZones();
+
+                updateUI();
+            }
+
+
+            // --- EVENT LISTENERS ---
+
+            // Auton
+            dom.autonBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const type = btn.id.split('-')[1];
+                    state.auton = state.auton === type ? 'none' : type;
+                    updateUI();
+                });
+            });
+
+            // Long Goals
+            dom.longGoals.forEach(slider => {
+                slider.addEventListener('input', () => {
+                    const max = 15;
+                    const key = slider.id.split('-')[1]; // r1
+                    const newValue = parseInt(slider.value);
+
+                    const color = key.charAt(0); // r
+                    const num = key.charAt(1); // 1
+                    const otherColor = color === 'r' ? 'b' : 'r';
+                    const otherKey = `${otherColor}${num}`; // b1
+                    let otherValue = state.longGoals[otherKey]; // Get current state value
+
+                    // Set this slider's new value
+                    state.longGoals[key] = newValue; 
+                    
+                    const total = newValue + otherValue;
+
+                    if (total > max) {
+                        const pushOut = total - max;
+                        otherValue = Math.max(0, otherValue - pushOut);
+                        state.longGoals[otherKey] = otherValue; // Update state for other slider
+                    }
+
+                    // Update the value of the other slider's DOM element directly
+                    const otherSliderId = `lg-${otherKey}`;
+                    const otherSlider = document.getElementById(otherSliderId);
+                    if (otherSlider) {
+                        otherSlider.value = otherValue;
+                    }
+
+
+                    autoSetControlZones();
+                    updateUI(); // updateUI will read state and fix all visuals
+                });
+            });
+
+            // Control Zones
+            function handleCZClick(side, color) {
+                state.controlOverride[side] = true;
+                state.controlZones[side] = state.controlZones[side] === color ? 'none' : color;
+                updateUI();
+            }
+            dom.czBtns.l_r.addEventListener('click', () => handleCZClick('left', 'r'));
+            dom.czBtns.l_b.addEventListener('click', () => handleCZClick('left', 'b'));
+            dom.czBtns.r_r.addEventListener('click', () => handleCZClick('right', 'r'));
+            dom.czBtns.r_b.addEventListener('click', () => handleCZClick('right', 'b'));
+
+            // Center Goals
+            dom.cgBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const goal = btn.dataset.goal; // 1, 2
+                    const color = btn.dataset.color; // r, b
+                    const val = parseInt(btn.dataset.val);
+                    const max = 7;
+
+                    const rKey = `r${goal}`;
+                    const bKey = `b${goal}`;
+
+                    let r = state.centerGoals[rKey];
+                    let b = state.centerGoals[bKey];
+
+                    if (val > 0) {
+                        // Adding blocks
+                        for (let i = 0; i < val; i++) {
+                            if (color === 'r') {
+                                if (r + b < max) r++; // Add if space
+                                else if (b > 0) { r++; b--; } // Push blue if full
+                            } else { // color === 'b'
+                                if (r + b < max) b++; // Add if space
+                                else if (r > 0) { b++; r--; } // Push red if full
+                            }
+                        }
+                    } else {
+                        // Removing blocks (val is negative)
+                        if (color === 'r') r = Math.max(0, r + val);
+                        else b = Math.max(0, b + val);
+                    }
+                    
+                    state.centerGoals[rKey] = r;
+                    state.centerGoals[bKey] = b;
+                    
+                    updateUI();
+                });
+            });
+
+            // Parking
+            dom.parkBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const color = btn.dataset.color;
+                    const val = parseInt(btn.dataset.val);
+                    state.parking[color] = val; // No toggle, just set
+                    updateUI();
+                });
+            });
+
+            // Reset Button
+            dom.resetBtn.addEventListener('click', resetAll);
+
+
+            // --- INITIALIZE ---
+            resetAll(); // Call resetAll to set initial state and UI
+        });
+    </script>
+</body>
+</html>
+
